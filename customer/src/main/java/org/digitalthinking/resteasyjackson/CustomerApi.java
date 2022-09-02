@@ -1,0 +1,134 @@
+package org.digitalthinking.resteasyjackson;
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonArray;
+import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.ext.web.client.WebClient;
+import lombok.extern.slf4j.Slf4j;
+import org.digitalthinking.entites.Customer;
+import org.digitalthinking.entites.Product;
+import org.digitalthinking.repositories.CustomerRepository;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
+
+@Slf4j
+@Path("/customer")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class CustomerApi {
+    @Inject
+    CustomerRepository pr;
+    @Inject
+    Vertx vertx;
+
+    WebClient webClient;
+
+    @PostConstruct
+    void inicialize() {
+        this.webClient = webClient.create(vertx, new WebClientOptions().setDefaultHost("localhost").setDefaultPort(8081).setSsl(false).setTrustAll(false));
+
+    }
+
+    @GET
+    @Blocking
+    public List<Customer> list() {
+        return pr.listCustomer();
+    }
+
+    @GET
+    @Path("/{Id}")
+    @Blocking
+    public Customer getById(@PathParam("Id") Long Id) {
+        return pr.findCustomer(Id);
+    }
+
+    @GET
+    @Path("/{Id}/product")
+    @Blocking
+    public Uni<Customer> getByIdProduct(@PathParam("Id") Long Id) {
+        return Uni.combine().all().unis(getCustomerReactive(Id),getAllProducts())
+                .combinedWith((v1,v2) -> {
+                    v1.getProducts().forEach(product -> {
+                        v2.forEach(p -> {
+                            if(product.getId().equals(p.getId())){
+                                product.setName(p.getName());
+                                product.setDescription(p.getDescription());
+                                ;                           }
+                        });
+                    });
+                    return v1;
+                });
+    }
+
+    @Blocking
+    @POST
+    public Response add(Customer c) {
+        c.getProducts().forEach(p -> p.setCustomer(c));
+        pr.createdCustomer(c);
+        return Response.ok().build();
+    }
+
+    @Blocking
+    @DELETE
+    @Path("/{Id}")
+    public Response delete(@PathParam("Id") Long Id) {
+        Customer customer = pr.findCustomer(Id);
+        pr.deleteCustomer(customer);
+        return Response.ok().build();
+    }
+
+    @Blocking
+    @PUT
+    public Response update(Customer p) {
+        Customer customer = pr.findCustomer(p.getId());
+        customer.setCode(p.getCode());
+        customer.setAccountNumber(p.getAccountNumber());
+        customer.setSurname(p.getSurname());
+        customer.setPhone(p.getPhone());
+        customer.setAddress(p.getAddress());
+        customer.setProducts(p.getProducts());
+        pr.updateCustomer(customer);
+        return Response.ok().build();
+    }
+
+    private Uni<Customer> getCustomerReactive(Long id) {
+      Customer customer =  pr.findCustomer(id);
+        Uni<Customer> item = Uni.createFrom().item(customer);
+        return item;
+    }
+
+    private Uni<List<Product>> getAllProducts(){
+        return webClient.get(8081, "localhost", "/product").send()
+                .onFailure().invoke(res -> log.error("Error recuperando productos ", res))
+                .onItem().transform(res -> {
+                    List<Product> lista = new ArrayList<>();
+                    JsonArray objects = res.bodyAsJsonArray();
+                    objects.forEach(p -> {
+                        log.info("See Objects: " + objects);
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        // Pass JSON string and the POJO class
+                        Product product = null;
+                        try {
+                            product = objectMapper.readValue(p.toString(), Product.class);
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+                        lista.add(product);
+                    });
+                    return lista;
+                });
+    }
+
+
+}
