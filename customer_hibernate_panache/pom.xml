@@ -30,13 +30,14 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-orm</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -45,14 +46,6 @@
     <dependency>
       <groupId>io.smallrye.reactive</groupId>
       <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-h2</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -69,19 +62,26 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.blazebit</groupId>
-      <artifactId>blaze-persistence-integration-quarkus</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.blazebit</groupId>
-      <artifactId>blaze-persistence-integration-hibernate-5.6</artifactId>
-      <version>1.6.7</version>
-      <scope>runtime</scope>
-    </dependency>
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-jdbc-postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-reactive-panache</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-reactive-pg-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-validator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-graphql</artifactId>
     </dependency>
   </dependencies>
   <build>
